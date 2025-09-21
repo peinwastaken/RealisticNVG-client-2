@@ -17,6 +17,7 @@ namespace BorkelRNVG.Patches
         {
             //await Task.Delay(delay);
             yield return new WaitForSeconds(delay);
+
             firearmController.SetLightsState(new LightStruct[]
             {
                 new LightStruct
@@ -49,7 +50,7 @@ namespace BorkelRNVG.Patches
 
             if (Plugin.isSprinting != Plugin.wasSprinting) //if the player goes from sprinting to not sprinting, or from not sprinting to sprinting
             {
-                foreach(Mod modification in firearmController.Item.Mods)
+                foreach (Mod modification in firearmController.Item.Mods)
                 {
                     LightComponent lightComponent;
                     if (modification.TryGetItemComponent<LightComponent>(out lightComponent))
@@ -67,7 +68,7 @@ namespace BorkelRNVG.Patches
                             firearmController.StartCoroutine(ToggleLaserWithDelay(firearmController, lightComponent, state, 0.3f)); //delay of 300ms when turning on
                             //delay of 300ms when turning on
                         }
-                        else if(Plugin.isSprinting == true && lightComponent.IsActive)
+                        else if (Plugin.isSprinting == true && lightComponent.IsActive)
                         {
                             state = false;
                             Plugin.LightDictionary[modification.Id] = true;

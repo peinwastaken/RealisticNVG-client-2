@@ -1,4 +1,4 @@
-﻿namespace BorkelRNVG.Helpers.Enum
+﻿namespace BorkelRNVG.Enum
 {
     public enum EMuzzleDeviceType
     {

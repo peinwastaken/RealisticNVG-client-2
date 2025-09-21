@@ -18,6 +18,7 @@ namespace BorkelRNVG.Patches
             await Task.Delay(200);
             inputSimulator.Keyboard.KeyUp(key);
         }
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(MenuTaskBar), "OnScreenChanged");

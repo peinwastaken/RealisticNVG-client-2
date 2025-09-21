@@ -1,13 +1,13 @@
 ﻿using BorkelRNVG.Helpers;
-using BorkelRNVG.Helpers.Configuration;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Configuration;
+using BorkelRNVG.Enum;
 using BSG.CameraEffects;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
-namespace BorkelRNVG
+namespace BorkelRNVG.Controllers
 {
     public class AutoGatingController : MonoBehaviour
     {
@@ -21,10 +21,10 @@ namespace BorkelRNVG
 
         // computeshader vars
         public ComputeShader computeShader = AssetHelper.LoadComputeShader("assets/shaders/pein/shaders/brightnessshader.compute", $"{AssetHelper.assetsDirectory}\\Shaders\\pein_shaders");
-        public ComputeBuffer brightnessBuffer;
-        public CommandBuffer commandBuffer;
+        private ComputeBuffer _brightnessBuffer;
+        private CommandBuffer _commandBuffer;
         private const float BRIGHTNESS_SCALE = 10000f;
-        private int kernel;
+        private int _kernel;
 
         // various other vars
         private float _currentBrightness = 1.0f; // value that GatingMultiplier gets lerped to
@@ -36,8 +36,8 @@ namespace BorkelRNVG
         private int _frameInterval = 5; // interval between shader dispatches
         private int _frameCount = 0;
 
-        private int textureWidth = Screen.width / 8;
-        private int textureHeight = Screen.height / 8;
+        private int _textureWidth = Screen.width / 8;
+        private int _textureHeight = Screen.height / 8;
 
         public Material blurMaterial;
         public Material additiveBlendMaterial;
@@ -55,7 +55,6 @@ namespace BorkelRNVG
         public float blurSize = 8f;
         public float contrastLevel = 3f;
         public float exposureAmount = 4f;
-        ComputeBuffer outputBuffer = new ComputeBuffer(1, sizeof(uint)); // float4 (RGBA) = 4 * sizeof(float)
 
         public static AutoGatingController Create()
         {
@@ -120,7 +119,7 @@ namespace BorkelRNVG
             // everything beyond this point makes my head hurt
             renderTexture = CreateRenderTexture();
 
-            commandBuffer = new CommandBuffer {name = "AutoGatingCommandBuffer"};
+            _commandBuffer = new CommandBuffer { name = "AutoGatingCommandBuffer" };
 
             blurTexture1 = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
             blurTexture2 = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
@@ -128,7 +127,7 @@ namespace BorkelRNVG
             exposureTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
             maskTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
 
-            contrastMaterial = new Material(AssetHelper.contrastShader) { name = "ContrastMaterial" }; 
+            contrastMaterial = new Material(AssetHelper.contrastShader) { name = "ContrastMaterial" };
             blurMaterial = new Material(AssetHelper.blurShader) { name = "BlurMaterial" };
             additiveBlendMaterial = new Material(AssetHelper.additiveBlendShader) { name = "AdditiveBlendMaterial" };
             exposureMaterial = new Material(AssetHelper.exposureShader) { name = "ExposureMaterial" };
@@ -136,11 +135,11 @@ namespace BorkelRNVG
 
             SetupCommandBuffer();
 
-            brightnessBuffer = new ComputeBuffer(1, sizeof(uint));
+            _brightnessBuffer = new ComputeBuffer(1, sizeof(uint));
 
-            kernel = computeShader.FindKernel("CSReduceBrightness");
-            computeShader.SetInt("_Width", textureWidth);
-            computeShader.SetInt("_Height", textureHeight);
+            _kernel = computeShader.FindKernel("CSReduceBrightness");
+            computeShader.SetInt("_Width", _textureWidth);
+            computeShader.SetInt("_Height", _textureHeight);
 
             // rendertexture debug
             if (Plugin.gatingDebug.Value == true)
@@ -160,46 +159,46 @@ namespace BorkelRNVG
 
         private void SetupCommandBuffer()
         {
-            commandBuffer.Clear();
-            
-            commandBuffer.Blit(BuiltinRenderTextureType.CurrentActive, exposureTexture, exposureMaterial);
+            _commandBuffer.Clear();
 
-            commandBuffer.Blit(exposureTexture, contrastTexture, contrastMaterial);
+            _commandBuffer.Blit(BuiltinRenderTextureType.CurrentActive, exposureTexture, exposureMaterial);
 
-            commandBuffer.Blit(contrastTexture, blurTexture1, blurMaterial); // blur pass 1
-            commandBuffer.Blit(blurTexture1, blurTexture2, blurMaterial); // blur pass 2
+            _commandBuffer.Blit(exposureTexture, contrastTexture, contrastMaterial);
+
+            _commandBuffer.Blit(contrastTexture, blurTexture1, blurMaterial); // blur pass 1
+            _commandBuffer.Blit(blurTexture1, blurTexture2, blurMaterial); // blur pass 2
 
             additiveBlendMaterial.SetTexture("_MainTex", contrastTexture);
             additiveBlendMaterial.SetTexture("_AddTex", blurTexture2);
 
-            commandBuffer.Blit(contrastTexture, renderTexture, additiveBlendMaterial);
+            _commandBuffer.Blit(contrastTexture, renderTexture, additiveBlendMaterial);
 
             maskMaterial.SetTexture("_BaseTex", renderTexture);
             maskMaterial.SetTexture("_MaskTex", maskTexture);
 
-            commandBuffer.Blit(renderTexture, renderTexture, maskMaterial);
+            _commandBuffer.Blit(renderTexture, renderTexture, maskMaterial);
 
-            mainCamera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
+            mainCamera.AddCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
         }
 
         public IEnumerator ComputeBrightness()
         {
             uint[] bufferData = new uint[1];
-            brightnessBuffer.SetData(bufferData);
+            _brightnessBuffer.SetData(bufferData);
 
-            int threadGroupsX = Mathf.CeilToInt(textureWidth / 8.0f);
-            int threadGroupsY = Mathf.CeilToInt(textureHeight / 8.0f);
-            computeShader.SetTexture(kernel, "_InputTexture", renderTexture);
-            computeShader.SetBuffer(kernel, "_BrightnessBuffer", brightnessBuffer);
-            computeShader.Dispatch(kernel, threadGroupsX, threadGroupsY, 1);
+            int threadGroupsX = Mathf.CeilToInt(_textureWidth / 8.0f);
+            int threadGroupsY = Mathf.CeilToInt(_textureHeight / 8.0f);
+            computeShader.SetTexture(_kernel, "_InputTexture", renderTexture);
+            computeShader.SetBuffer(_kernel, "_BrightnessBuffer", _brightnessBuffer);
+            computeShader.Dispatch(_kernel, threadGroupsX, threadGroupsY, 1);
 
             // wait a frame (is this even necessary?)
             yield return new WaitForEndOfFrame();
 
-            brightnessBuffer.GetData(bufferData);
+            _brightnessBuffer.GetData(bufferData);
 
             uint totalBrightness = bufferData[0];
-            float avgBrightness = (float)totalBrightness / (textureWidth * textureHeight * BRIGHTNESS_SCALE);
+            float avgBrightness = (float)totalBrightness / (_textureWidth * _textureHeight * BRIGHTNESS_SCALE);
 
             _currentBrightness = avgBrightness;
         }
@@ -244,7 +243,7 @@ namespace BorkelRNVG
 
         private RenderTexture CreateRenderTexture()
         {
-            RenderTexture rt = new RenderTexture(textureWidth, textureHeight, 24, RenderTextureFormat.ARGB32);
+            RenderTexture rt = new RenderTexture(_textureWidth, _textureHeight, 24, RenderTextureFormat.ARGB32);
             rt.enableRandomWrite = true;
             rt.useMipMap = false;
             rt.autoGenerateMips = false;
@@ -263,9 +262,9 @@ namespace BorkelRNVG
             contrastTexture?.Release();
             exposureTexture?.Release();
             maskTexture?.Release();
-            brightnessBuffer?.Release();
-            mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
-            commandBuffer?.Release();
+            _brightnessBuffer?.Release();
+            mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
+            _commandBuffer?.Release();
         }
     }
 }

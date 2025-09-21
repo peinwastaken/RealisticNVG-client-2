@@ -1,9 +1,8 @@
 ﻿using SPT.Reflection.Patching;
 using HarmonyLib;
 using System.Reflection;
-using UnityEngine;
 using BorkelRNVG.Helpers;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Enum;
 
 namespace BorkelRNVG.Patches
 {
@@ -40,7 +39,7 @@ namespace BorkelRNVG.Patches
             __instance.IsMotionBlurred = true;
             __instance.PixelationUtilities = new PixelationUtilities();
 
-            if(Plugin.t7Pixelation.Value)
+            if (Plugin.t7Pixelation.Value)
             {
                 //__instance.PixelationUtilities.Mode = GClass866.PixelationMode.CRT;
                 pixelationUtilities.Mode = 0;
@@ -49,7 +48,7 @@ namespace BorkelRNVG.Patches
                 pixelationUtilities.PixelationShader = AssetHelper.pixelationShader;
             }
 
-            if(Plugin.t7HzLock.Value)
+            if (Plugin.t7HzLock.Value)
             {
                 __instance.IsFpsStuck = true;
                 __instance.StuckFpsUtilities = new StuckFPSUtilities()

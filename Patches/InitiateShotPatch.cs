@@ -1,6 +1,7 @@
 ﻿using BorkelRNVG.Helpers;
-using BorkelRNVG.Helpers.Configuration;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Configuration;
+using BorkelRNVG.Enum;
+using BorkelRNVG.Controllers;
 using EFT;
 using SPT.Reflection.Patching;
 using System.Reflection;
@@ -55,7 +56,7 @@ namespace BorkelRNVG.Patches
             switch (deviceType)
             {
                 case EMuzzleDeviceType.None:
-                    gatingLerp = 0.15f; 
+                    gatingLerp = 0.15f;
                     break;
                 case EMuzzleDeviceType.Suppressor:
                     gatingLerp = 1.0f;

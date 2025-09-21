@@ -4,7 +4,7 @@ using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 using BorkelRNVG.Helpers;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Enum;
 
 namespace BorkelRNVG.Patches
 {

@@ -17,6 +17,7 @@ namespace BorkelRNVG.Patches
             await Task.Delay(200);
             inputSimulator.Keyboard.KeyUp(key);
         }
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(NightVision), "method_1");
@@ -32,7 +33,7 @@ namespace BorkelRNVG.Patches
 
             InputSimulator inputSimulator = new InputSimulator(); // poop
             VirtualKeyCode key = Plugin.nvgKey;
-            if(__0)
+            if (__0)
                 Task.Run(() => activateReshade(inputSimulator, Plugin.nvgKey));
             else if (!__0)
                 Task.Run(() => activateReshade(inputSimulator, VirtualKeyCode.NUMPAD5));

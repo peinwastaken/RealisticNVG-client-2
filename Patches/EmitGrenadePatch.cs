@@ -1,6 +1,7 @@
-﻿using BorkelRNVG.Helpers.Configuration;
-using BorkelRNVG.Helpers.Enum;
+﻿using BorkelRNVG.Configuration;
+using BorkelRNVG.Enum;
 using BorkelRNVG.Helpers;
+using BorkelRNVG.Controllers;
 using EFT;
 using HarmonyLib;
 using SPT.Reflection.Patching;

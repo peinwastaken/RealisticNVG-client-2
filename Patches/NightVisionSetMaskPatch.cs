@@ -3,7 +3,7 @@ using BSG.CameraEffects;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
-using BorkelRNVG.Helpers.Configuration;
+using BorkelRNVG.Configuration;
 using BorkelRNVG.Helpers;
 
 
@@ -13,7 +13,7 @@ namespace BorkelRNVG.Patches
     {
         // This will patch the instance of the NightVision class
         // Thanks Fontaine, Mirni, Cj, GrooveypenguinX, Choccster, kiobu-kouhai, GrakiaXYZ, kiki, Props (sorry if i forget someone)
-        
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(NightVision), nameof(NightVision.SetMask));

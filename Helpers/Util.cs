@@ -1,5 +1,6 @@
-﻿using BorkelRNVG.Helpers.Configuration;
-using BorkelRNVG.Helpers.Enum;
+﻿using BorkelRNVG.Configuration;
+using BorkelRNVG.Enum;
+using BorkelRNVG.Controllers;
 using BSG.CameraEffects;
 using Comfort.Common;
 using EFT;
@@ -10,7 +11,7 @@ using UnityEngine;
 
 namespace BorkelRNVG.Helpers
 {
-    public class Util
+    public static class Util
     {
         private static GameWorld _gameWorld;
         private static CameraClass _fpsCamera;
@@ -68,7 +69,7 @@ namespace BorkelRNVG.Helpers
         public static string GetCurrentNvgItemId()
         {
             if (!IsNvgValid()) return null;
-        
+
             return _mainPlayer.NightVisionObserver.Component.Item.StringTemplateId;
         }
 

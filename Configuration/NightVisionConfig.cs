@@ -1,7 +1,8 @@
 ﻿using BepInEx.Configuration;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Enum;
+using BorkelRNVG.Helpers;
 
-namespace BorkelRNVG.Helpers.Configuration
+namespace BorkelRNVG.Configuration
 {
     public class NightVisionConfig
     {
@@ -63,4 +64,3 @@ namespace BorkelRNVG.Helpers.Configuration
         }
     }
 }
-

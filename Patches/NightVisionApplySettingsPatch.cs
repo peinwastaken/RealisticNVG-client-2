@@ -4,8 +4,9 @@ using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 using System.Collections.Generic;
-using BorkelRNVG.Helpers.Configuration;
+using BorkelRNVG.Configuration;
 using BorkelRNVG.Helpers;
+using BorkelRNVG.Controllers;
 
 namespace BorkelRNVG.Patches
 {

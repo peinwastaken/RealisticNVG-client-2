@@ -5,31 +5,11 @@ using UnityEngine.Networking;
 using UnityEngine;
 using System.Reflection;
 using System;
-using BorkelRNVG.Helpers.Enum;
+using BorkelRNVG.Enum;
+using BorkelRNVG.Data;
 
 namespace BorkelRNVG.Helpers
 {
-    public class NVGTextureData
-    {
-        public string MaskPath;
-        public string LensPath;
-        public Texture2D Mask;
-        public Texture2D Lens;
-
-        public NVGTextureData(string maskPath, string lensPath)
-        {
-            if (maskPath != null)
-            {
-                Mask = AssetHelper.LoadPNG(maskPath, TextureWrapMode.Clamp);
-            }
-            
-            if (lensPath != null)
-            {
-                Lens = AssetHelper.LoadPNG(lensPath, TextureWrapMode.Clamp);
-            }
-        }
-    }
-
     public class AssetHelper
     {
         public static readonly string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -43,12 +23,6 @@ namespace BorkelRNVG.Helpers
         public static Shader exposureShader;
         public static Shader maskShader;
 
-        public static Material blurMaterial;
-        public static Material additiveBlendMaterial;
-        public static Material contrastMaterial;
-        public static Material exposureMaterial;
-        public static Material maskMaterial;
-
         public static Texture2D noiseTexture = LoadPNG($"{assetsDirectory}\\MaskTextures\\Noise.png", TextureWrapMode.Repeat);
 
         public static Dictionary<string, AudioClip> LoadedAudioClips = new Dictionary<string, AudioClip>();
@@ -56,12 +30,12 @@ namespace BorkelRNVG.Helpers
         // better! :)
         public static Dictionary<ENVGTexture, NVGTextureData> NightVisionTextures = new Dictionary<ENVGTexture, NVGTextureData>()
         {
-            { ENVGTexture.Anvis, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\mask_anvis.png", $"{assetsDirectory}\\LensTextures\\lens_anvis.png") },
-            { ENVGTexture.Binocular, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\mask_binocular.png", $"{assetsDirectory}\\LensTextures\\lens_binocular.png") },
-            { ENVGTexture.Monocular, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\mask_old_monocular.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") },
-            { ENVGTexture.Pnv, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\mask_pnv.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
-            { ENVGTexture.Thermal, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\mask_thermal.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
-            { ENVGTexture.Pixel, new NVGTextureData( $"{assetsDirectory}\\MaskTextures\\pixel_mask1.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") }
+            { ENVGTexture.Anvis, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_anvis.png", $"{assetsDirectory}\\LensTextures\\lens_anvis.png") },
+            { ENVGTexture.Binocular, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_binocular.png", $"{assetsDirectory}\\LensTextures\\lens_binocular.png") },
+            { ENVGTexture.Monocular, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_old_monocular.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") },
+            { ENVGTexture.Pnv, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_pnv.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
+            { ENVGTexture.Thermal, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_thermal.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
+            { ENVGTexture.Pixel, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\pixel_mask1.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") }
         };
 
         public static Texture MaskToLens(Texture maskTex)

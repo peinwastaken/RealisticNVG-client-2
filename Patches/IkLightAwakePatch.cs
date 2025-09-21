@@ -24,7 +24,7 @@ namespace BorkelRNVG.Patches
         {
             return AccessTools.Method(typeof(IkLight), nameof(IkLight.Awake));
         }
-        
+
         public static void UpdateAll()
         {
             for (int i = _ikLights.Count - 1; i >= 0; i--)
