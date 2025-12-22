@@ -85,3 +85,6 @@ crashlytics-build.properties
 /obj/Debug/net472/BorkelRNVG.GeneratedMSBuildEditorConfig.editorconfig
 /obj/Debug/net472/PluginInfo.cs
 *.psd
+
+.idea/
+Release/

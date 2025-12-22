@@ -23,31 +23,31 @@
 
     <ItemGroup>
         <Reference Include="Assembly-CSharp">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Comfort">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="ItemComponent.Types">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="spt-reflection">
-            <HintPath>..\dependencies\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+            <HintPath>..\..\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Unity.Postprocessing.Runtime">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI">
-            <HintPath>..\dependencies\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+            <HintPath>..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>
@@ -111,4 +111,31 @@
             <Private>False</Private>
         </Reference>
     </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildProjectFullPath).user" Condition="Exists('$(MSBuildProjectFullPath).user')" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="BorkelRNVG.csproj.user" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\" />
+    </ItemGroup>
+
+    <Target Name="CopyToSPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">
+        <PropertyGroup>
+            <ModsDirectoryPath>$(SPTPath)\BepInEx\plugins\$(MSBuildProjectName)</ModsDirectoryPath>
+        </PropertyGroup>
+
+        <Message Importance="high" Text="Copying mods to $(ModsDirectoryPath)" />
+        <ItemGroup>
+            <FilesToCopy Include="$(OutputPath)$(TargetName)$(TargetExt)" />
+            <FilesToCopy Include="$(OutputPath)$(TargetName).pdb" />
+            <FilesToCopy Include="Resources\**\*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ModsDirectoryPath)\%(RecursiveDir)" ContinueOnError="false" />
+        <Message Importance="high" Text="Files copied" />
+    </Target>
 </Project>
