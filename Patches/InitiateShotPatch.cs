@@ -2,6 +2,8 @@
 using BorkelRNVG.Configuration;
 using BorkelRNVG.Enum;
 using BorkelRNVG.Controllers;
+using BorkelRNVG.Models;
+using Comfort.Common;
 using EFT;
 using SPT.Reflection.Patching;
 using System.Reflection;
@@ -29,28 +31,20 @@ namespace BorkelRNVG.Patches
         [PatchPostfix]
         private static void PatchPostfix(Player.FirearmController __instance, AmmoItemClass ammo, Vector3 shotPosition, Vector3 shotDirection)
         {
-            CameraClass cameraClass = Util.GetCameraClass();
-            if (cameraClass == null || cameraClass.Camera == null) return;
+            string itemId = PlayerHelper.GetCurrentNvgItemId();
+            if (itemId == null) return;
 
-            AutoGatingController gatingInst = AutoGatingController.Instance;
-            if (gatingInst == null) return;
-
-            string nvgId = Util.GetCurrentNvgItemId();
-            if (nvgId == null) return;
-
-            NightVisionItemConfig nvgItemConfig = NightVisionItemConfig.Get(nvgId);
-            if (nvgItemConfig == null) return;
-
-            NightVisionConfig nvgConfig = nvgItemConfig.NightVisionConfig;
-            if (nvgConfig == null) return;
-
-            EGatingType gatingType = nvgConfig.AutoGatingType.Value;
-            if (gatingType == EGatingType.Off || gatingType == EGatingType.AutoGain) return;
+            NvgData nvgData = NvgHelper.GetNvgData(itemId);
+            if (nvgData == null) return;
+            
+            EGatingType gatingType = nvgData.NightVisionConfig.AutoGatingType.Value;
+            if (gatingType != EGatingType.AutoGating) return;
 
             EMuzzleDeviceType deviceType = Util.GetMuzzleDeviceType(__instance);
 
             Player mainPlayer = Util.GetPlayer();
             Player firearmOwner = __instance.GetComponentInParent<Player>();
+            Camera camera = CameraClass.Instance.Camera;
 
             float gatingLerp;
             switch (deviceType)
@@ -71,8 +65,6 @@ namespace BorkelRNVG.Patches
 
             if (firearmOwner != mainPlayer)
             {
-                Camera camera = cameraClass.Camera;
-
                 Vector3 cameraPos = camera.transform.position;
                 Vector3 dir = shotPosition - cameraPos;
 
@@ -85,12 +77,12 @@ namespace BorkelRNVG.Patches
                 if (isVisible && isOnScreen)
                 {
                     float finalGatingMult = Mathf.Lerp(0, shotDistanceMult, gatingLerp);
-                    AutoGatingController.Instance?.StartCoroutine(AutoGatingController.Instance.AdjustAutoGating(0.05f, finalGatingMult, gatingInst, nvgConfig));
+                    AutoGatingController.Instance?.StartCoroutine(AutoGatingController.Instance.AdjustAutoGating(0.05f, finalGatingMult, nvgData));
                 }
             }
             else
             {
-                AutoGatingController.Instance?.StartCoroutine(AutoGatingController.Instance.AdjustAutoGating(0.05f, gatingLerp, gatingInst, nvgConfig));
+                AutoGatingController.Instance?.StartCoroutine(AutoGatingController.Instance.AdjustAutoGating(0.05f, gatingLerp, nvgData));
             }
         }
     }

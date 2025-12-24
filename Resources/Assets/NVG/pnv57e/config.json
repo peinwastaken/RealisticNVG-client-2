@@ -1,0 +1,17 @@
+{
+  "itemId": "694c243d6384db19c09721c0",
+  "category": "PNV-57E",
+  "gain": 2.4,
+  "noiseIntensity": 0.2,
+  "noiseSize": 0.1,
+  "maskSize": 1,
+  "red": 95,
+  "green": 210,
+  "blue": 255,
+  "gatingType": "AutoGating",
+  "gatingSpeed": 0.3,
+  "minBrightness": 0.2,
+  "maxBrightness": 1,
+  "minBrightnessThreshold": 0,
+  "maxBrightnessThreshold": 0.15
+}

@@ -13,20 +13,16 @@ using HarmonyLib;
 
 namespace BorkelRNVG
 {
-    [BepInPlugin("com.borkel.nvgmasks", "Borkel's Realistic NVGs", "1.7.3")]
+    [BepInPlugin("com.borkel.nvgmasks", "Borkel's Realistic NVGs", "2.0.0")]
     public class Plugin : BaseUnityPlugin
     {
-        public static ManualLogSource Log;
+        public static new ManualLogSource Logger;
         public static Harmony harmony = new Harmony("com.borkel.nvgmasks");
 
         // global
         public static ConfigEntry<float> globalMaskSize;
         public static ConfigEntry<float> globalGain;
         public static ConfigEntry<bool> allowAmbientChange;
-
-        // T-7 specific
-        public static ConfigEntry<bool> t7Pixelation;
-        public static ConfigEntry<bool> t7HzLock;
 
         //sprint patch stuff
         public static ConfigEntry<bool> enableSprintPatch;
@@ -65,7 +61,7 @@ namespace BorkelRNVG
         private void Awake()
         {
             // BepInEx F12 menu
-            Log = Logger;
+            Logger = base.Logger;
 
             // Miscellaneous
             enableSprintPatch = Config.Bind(Category.miscCategory, "Sprint toggles tactical devices. DO NOT USE WITH FIKA.", false, "Sprinting will toggle tactical devices until you stop sprinting, this mitigates the IR lights being visible outside of the NVGs. I recommend enabling this feature.");
@@ -106,10 +102,13 @@ namespace BorkelRNVG
 
             // create nvg config classes
             Util.InitializeVars();
+            
+            // load assets
             AssetHelper.LoadShaders();
+            AssetHelper.LoadNvgs(Config);
+            AssetHelper.LoadThermals(Config);
             AssetHelper.LoadAudioClips();
-            NightVisionItemConfig.InitializeNVGs(Config);
-
+            
             try
             {
                 harmony.PatchAll();
@@ -126,6 +125,11 @@ namespace BorkelRNVG
                 new LaserBeamAwakePatch().Enable();
                 new LaserBeamLateUpdatePatch().Enable();
                 new EmitGrenadePatch().Enable();
+
+                if (allowAmbientChange.Value)
+                {
+                    AmbientPatch.TogglePatch(true);
+                }
 
                 Logger.LogInfo("Patches enabled successfully!");
             }
@@ -144,18 +148,17 @@ namespace BorkelRNVG
 
         void Update()
         {
-            if (nvgOn)
+            if (!nvgOn) return;
+            
+            if (Input.GetKeyDown(gatingInc.Value) && gatingLevel.Value < 2)
             {
-                if (Input.GetKeyDown(gatingInc.Value) && gatingLevel.Value < 2)
-                {
-                    gatingLevel.Value++;
-                    Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
-                }
-                else if (Input.GetKeyUp(gatingDec.Value) && gatingLevel.Value > -2)
-                {
-                    gatingLevel.Value--;
-                    Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
-                }
+                gatingLevel.Value++;
+                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
+            }
+            else if (Input.GetKeyUp(gatingDec.Value) && gatingLevel.Value > -2)
+            {
+                gatingLevel.Value--;
+                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
             }
         }
     }

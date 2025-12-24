@@ -1,6 +1,7 @@
 ﻿using BorkelRNVG.Configuration;
 using BorkelRNVG.Enum;
 using BorkelRNVG.Controllers;
+using BorkelRNVG.Models;
 using BSG.CameraEffects;
 using Comfort.Common;
 using EFT;
@@ -56,21 +57,9 @@ namespace BorkelRNVG.Helpers
 
         public static bool IsNvgValid()
         {
-            if (_gameWorld == null || _nightVision == null || _mainPlayer == null) return false;
+            if (!_gameWorld || !_nightVision || !_mainPlayer) return false;
 
-            if (_mainPlayer.NightVisionObserver.Component == null
-                || _mainPlayer.NightVisionObserver.Component.Item == null
-                || _mainPlayer.NightVisionObserver.Component.Item.StringTemplateId == null)
-                return false;
-
-            return true;
-        }
-
-        public static string GetCurrentNvgItemId()
-        {
-            if (!IsNvgValid()) return null;
-
-            return _mainPlayer.NightVisionObserver.Component.Item.StringTemplateId;
+            return _mainPlayer.NightVisionObserver.Component?.Item?.StringTemplateId != null;
         }
 
         private static void OnCameraDestroyed()
@@ -89,32 +78,29 @@ namespace BorkelRNVG.Helpers
             return false;
         }
 
-        public static void ApplyNightVisionSettings(object sender, EventArgs eventArgs)
+        public static void ApplyNightVisionSettings()
         {
-            if (_nightVision == null)
-            {
-                if (!CheckFpsCameraExist())
-                {
-                    return;
-                }
-                _nightVision = _fpsCamera.NightVision;
-            }
+            NightVision nightVision = CameraClass.Instance.NightVision;
 
-            _nightVision.ApplySettings();
+            nightVision.ApplySettings();
         }
 
-        public static void ApplyGatingSettings(object sender, EventArgs eventArgs)
+        public static void ApplyGatingSettings()
         {
-            NightVisionItemConfig nvgConfig = NightVisionItemConfig.Get(GetCurrentNvgItemId());
+            string itemId = PlayerHelper.GetCurrentNvgItemId();
+            if (itemId == null) return;
 
-            AutoGatingController.Instance?.ApplySettings(nvgConfig.NightVisionConfig);
+            NvgData nvgData = NvgHelper.GetNvgData(itemId);
+            if (nvgData == null) return;
+
+            AutoGatingController.Instance?.ApplySettings(nvgData.NightVisionConfig);
         }
 
         public static EMuzzleDeviceType GetMuzzleDeviceType(Player.FirearmController controller)
         {
             if (controller.IsSilenced) return EMuzzleDeviceType.Suppressor;
 
-            Slot[] slots = controller.Item.Slots;
+            Slot[] slots = controller.Weapon.Slots;
             for (int i = 0; i < slots.Length; i++)
             {
                 if (slots[i].ContainedItem is FlashHiderItemClass)
@@ -130,7 +116,7 @@ namespace BorkelRNVG.Helpers
         {
             Vector3 dir = v2 - v1;
             Vector3 dirNormal = dir.normalized;
-            float dist = dir.magnitude; // idk bruh
+            float dist = dir.magnitude;
             bool hit = Physics.Raycast(v1, dirNormal, dist, layer);
 
             return !hit;

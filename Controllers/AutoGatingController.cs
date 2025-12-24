@@ -1,8 +1,12 @@
 ﻿using BorkelRNVG.Helpers;
 using BorkelRNVG.Configuration;
 using BorkelRNVG.Enum;
+using BorkelRNVG.Globals;
+using BorkelRNVG.Models;
 using BSG.CameraEffects;
+using EFT;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -20,7 +24,7 @@ namespace BorkelRNVG.Controllers
         public NightVision nightVision;
 
         // computeshader vars
-        public ComputeShader computeShader = AssetHelper.LoadComputeShader("assets/shaders/pein/shaders/brightnessshader.compute", $"{AssetHelper.assetsDirectory}\\Shaders\\pein_shaders");
+        public ComputeShader computeShader = FileHelper.LoadComputeShader("assets/shaders/pein/shaders/brightnessshader.compute", Path.Combine(ModDirectories.ShadersPath, "pein_shaders"));
         private ComputeBuffer _brightnessBuffer;
         private CommandBuffer _commandBuffer;
         private const float BRIGHTNESS_SCALE = 10000f;
@@ -63,20 +67,31 @@ namespace BorkelRNVG.Controllers
             return autoGatingController;
         }
 
-        public IEnumerator AdjustAutoGating(float delay, float multiplier, AutoGatingController gatingController, NightVisionConfig nvgConfig)
+        public IEnumerator AdjustAutoGating(float delay, float multiplier, NvgData nvgData)
         {
             yield return new WaitForSeconds(delay);
 
-            if (Plugin.clampMinGating.Value == true)
+            if (Plugin.clampMinGating.Value)
             {
-                float newBrightness = Mathf.Clamp(gatingController.GatingMultiplier * multiplier, nvgConfig.MinBrightness.Value, nvgConfig.MaxBrightness.Value);
-                gatingController.GatingMultiplier = newBrightness;
+                float newBrightness = Mathf.Clamp(GatingMultiplier * multiplier, nvgData.NightVisionConfig.MinBrightness.Value, nvgData.NightVisionConfig.MaxBrightness.Value);
+                GatingMultiplier = newBrightness;
             }
             else
             {
-                float newBrightness = Mathf.Clamp(gatingController.GatingMultiplier * multiplier, 0f, nvgConfig.MaxBrightness.Value);
-                gatingController.GatingMultiplier = newBrightness;
+                float newBrightness = Mathf.Clamp(GatingMultiplier * multiplier, 0f, nvgData.NightVisionConfig.MaxBrightness.Value);
+                GatingMultiplier = newBrightness;
             }
+        }
+        
+        public void SetEnabled(bool state)
+        {
+            enabled = state;
+            
+            if (enabled) return;
+            
+            _currentBrightness = 1f;
+            GatingMultiplier = 1f;
+            nightVision.ApplySettings();
         }
 
         public void ApplySettings(NightVisionConfig config)
@@ -198,23 +213,23 @@ namespace BorkelRNVG.Controllers
             _brightnessBuffer.GetData(bufferData);
 
             uint totalBrightness = bufferData[0];
-            float avgBrightness = (float)totalBrightness / (_textureWidth * _textureHeight * BRIGHTNESS_SCALE);
+            float avgBrightness = totalBrightness / (_textureWidth * _textureHeight * BRIGHTNESS_SCALE);
 
             _currentBrightness = avgBrightness;
         }
 
         private void FixedUpdate()
         {
-            string nvgId = Util.GetCurrentNvgItemId();
+            string nvgId = PlayerHelper.GetCurrentNvgItemId();
             if (nvgId == null) return;
 
-            NightVisionItemConfig nvgConfig = NightVisionItemConfig.Get(nvgId);
-            if (nvgConfig == null) return;
+            NvgData nvgData = NvgHelper.GetNvgData(nvgId);
+            if (nvgData == null) return;
 
-            EGatingType gatingType = nvgConfig.NightVisionConfig.AutoGatingType.Value;
-            bool gatingEnabled = gatingType == EGatingType.AutoGating || gatingType == EGatingType.AutoGain;
+            EGatingType gatingType = nvgData.NightVisionConfig.AutoGatingType.Value;
+            bool nvgGatingEnabled = gatingType == EGatingType.AutoGating || gatingType == EGatingType.AutoGain;
 
-            if (!Plugin.nvgOn || gatingEnabled == false || Plugin.enableAutoGating.Value == false)
+            if (!Plugin.nvgOn || nvgGatingEnabled || Plugin.enableAutoGating.Value)
             {
                 _currentBrightness = 1f;
                 GatingMultiplier = 1f;

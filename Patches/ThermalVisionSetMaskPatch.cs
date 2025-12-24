@@ -3,6 +3,9 @@ using HarmonyLib;
 using System.Reflection;
 using BorkelRNVG.Helpers;
 using BorkelRNVG.Enum;
+using BorkelRNVG.Models;
+using Comfort.Common;
+using EFT;
 
 namespace BorkelRNVG.Patches
 {
@@ -18,43 +21,40 @@ namespace BorkelRNVG.Patches
         [PatchPrefix]
         private static void PatchPrefix(ref ThermalVision __instance)
         {
-            if (__instance.IsPixelated)
-            {
-                return;
-            }
+            string itemId = PlayerHelper.GetCurrentThermalItemId();
+            if (itemId == null) return;
 
-            //this is all for the T7
-            //__instance.TextureMask.Size = 1f;
-            //__instance.ThermalVisionUtilities.MaskDescription.MaskSize = 1f; //for some reason changing mask size does not work
-
+            ThermalData thermalData = NvgHelper.GetThermalData(itemId);
+            if (thermalData == null) return;
+            
             MaskDescription maskDescription = __instance.ThermalVisionUtilities.MaskDescription;
             PixelationUtilities pixelationUtilities = __instance.PixelationUtilities;
 
-            maskDescription.Mask = AssetHelper.NightVisionTextures[ENVGTexture.Thermal].Mask;
-            maskDescription.OldMonocularMaskTexture = AssetHelper.NightVisionTextures[ENVGTexture.Monocular].Mask;
-            maskDescription.ThermalMaskTexture = AssetHelper.NightVisionTextures[ENVGTexture.Thermal].Mask;
+            maskDescription.Mask = thermalData.MaskTexture;
+            maskDescription.OldMonocularMaskTexture = thermalData.MaskTexture;
+            maskDescription.ThermalMaskTexture = thermalData.MaskTexture;
 
-            __instance.IsPixelated = true;
-            __instance.IsNoisy = false;
-            __instance.IsMotionBlurred = true;
-            __instance.PixelationUtilities = new PixelationUtilities();
-
-            if (Plugin.t7Pixelation.Value)
+            __instance.IsPixelated = thermalData.ThermalConfig.IsPixelated.Value;
+            __instance.IsNoisy = thermalData.ThermalConfig.IsNoisy.Value;
+            __instance.IsMotionBlurred = thermalData.ThermalConfig.IsMotionBlurred.Value;
+            
+            if (thermalData.ThermalConfig.IsPixelated.Value)
             {
-                //__instance.PixelationUtilities.Mode = GClass866.PixelationMode.CRT;
+                __instance.PixelationUtilities = new PixelationUtilities();
+                
                 pixelationUtilities.Mode = 0;
                 pixelationUtilities.BlockCount = 320; //doesn't do anything really
-                pixelationUtilities.PixelationMask = AssetHelper.NightVisionTextures[ENVGTexture.Pixel].Mask;
+                pixelationUtilities.PixelationMask = AssetHelper.pixelTexture;
                 pixelationUtilities.PixelationShader = AssetHelper.pixelationShader;
             }
 
-            if (Plugin.t7HzLock.Value)
+            if (thermalData.ThermalConfig.IsFpsStuck.Value)
             {
                 __instance.IsFpsStuck = true;
                 __instance.StuckFpsUtilities = new StuckFPSUtilities()
                 {
-                    MinFramerate = 60,
-                    MaxFramerate = 60
+                    MinFramerate = thermalData.ThermalConfig.MinFps.Value,
+                    MaxFramerate = thermalData.ThermalConfig.MaxFps.Value
                 };
             }
         }

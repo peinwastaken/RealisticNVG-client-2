@@ -38,6 +38,9 @@
             <HintPath>..\..\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Newtonsoft.Json">
+          <HintPath>..\..\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
+        </Reference>
         <Reference Include="spt-reflection">
             <HintPath>..\..\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
             <Private>False</Private>
@@ -122,6 +125,7 @@
 
     <ItemGroup>
       <Folder Include="Resources\" />
+      <Folder Include="Resources\Assets\NVG\" />
     </ItemGroup>
 
     <Target Name="CopyToSPT" AfterTargets="AfterBuild" Condition="'$(SPTPath)' != ''">

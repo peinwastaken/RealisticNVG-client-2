@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using BepInEx.Configuration;
+using BorkelRNVG.Configuration;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using UnityEngine.Networking;
 using UnityEngine;
 using System.Reflection;
 using System;
-using BorkelRNVG.Enum;
-using BorkelRNVG.Data;
+using BorkelRNVG.Globals;
+using BorkelRNVG.Models;
+using BorkelRNVG.Struct;
+using EFT;
+using System.Threading.Tasks;
 
 namespace BorkelRNVG.Helpers
 {
-    public class AssetHelper
+    public static class AssetHelper
     {
         public static readonly string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static readonly string assetsDirectory = $"{directory}\\Assets";
@@ -23,137 +26,162 @@ namespace BorkelRNVG.Helpers
         public static Shader exposureShader;
         public static Shader maskShader;
 
-        public static Texture2D noiseTexture = LoadPNG($"{assetsDirectory}\\MaskTextures\\Noise.png", TextureWrapMode.Repeat);
+        public static Texture noiseTexture;
+        public static Texture pixelTexture;
 
-        public static Dictionary<string, AudioClip> LoadedAudioClips = new Dictionary<string, AudioClip>();
-
-        // better! :)
-        public static Dictionary<ENVGTexture, NVGTextureData> NightVisionTextures = new Dictionary<ENVGTexture, NVGTextureData>()
-        {
-            { ENVGTexture.Anvis, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_anvis.png", $"{assetsDirectory}\\LensTextures\\lens_anvis.png") },
-            { ENVGTexture.Binocular, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_binocular.png", $"{assetsDirectory}\\LensTextures\\lens_binocular.png") },
-            { ENVGTexture.Monocular, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_old_monocular.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") },
-            { ENVGTexture.Pnv, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_pnv.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
-            { ENVGTexture.Thermal, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\mask_thermal.png", $"{assetsDirectory}\\LensTextures\\lens_pnv.png") },
-            { ENVGTexture.Pixel, new NVGTextureData($"{assetsDirectory}\\MaskTextures\\pixel_mask1.png", $"{assetsDirectory}\\LensTextures\\lens_old_monocular.png") }
-        };
-
-        public static Texture MaskToLens(Texture maskTex)
-        {
-            foreach (var data in NightVisionTextures)
-            {
-                if (data.Value.Mask == maskTex) // sigh..
-                {
-                    return data.Value.Lens;
-                }
-            }
-            return null;
-        }
+        public static Dictionary<string, AudioClip> LoadedAudioClips = [];
+        public static Dictionary<string, NvgData> NvgData = [];
+        public static Dictionary<string, ThermalData> ThermalData = [];
 
         public static void LoadShaders()
         {
             string eftShaderPath = Path.Combine(Environment.CurrentDirectory, "EscapeFromTarkov_Data", "StreamingAssets", "Windows", "shaders");
             string nightVisionShaderPath = $"{assetsDirectory}\\Shaders\\borkel_realisticnvg_shaders";
+            string peinShaders = Path.Combine(ModDirectories.ShadersPath, "pein_shaders");
 
-            pixelationShader = LoadShader("Assets/Systems/Effects/Pixelation/Pixelation.shader", eftShaderPath); // T-7 pixelation
-            nightVisionShader = LoadShader("Assets/Shaders/CustomNightVision.shader", nightVisionShaderPath);
-            contrastShader = LoadShader("assets/shaders/pein/shaders/contrastshader.shader", $"{assetsDirectory}\\Shaders\\pein_shaders");
-            additiveBlendShader = LoadShader("assets/shaders/pein/shaders/additiveblendshader.shader", $"{assetsDirectory}\\Shaders\\pein_shaders");
-            blurShader = LoadShader("assets/shaders/pein/shaders/blurshader.shader", $"{assetsDirectory}\\Shaders\\pein_shaders");
-            exposureShader = LoadShader("assets/shaders/pein/shaders/exposureshader.shader", $"{assetsDirectory}\\Shaders\\pein_shaders");
-            maskShader = LoadShader("assets/shaders/pein/shaders/maskshader.shader", $"{assetsDirectory}\\Shaders\\pein_shaders");
+            pixelationShader = FileHelper.LoadShader("Assets/Systems/Effects/Pixelation/Pixelation.shader", eftShaderPath); // T-7 pixelation
+            nightVisionShader = FileHelper.LoadShader("Assets/Shaders/CustomNightVision.shader", nightVisionShaderPath);
+            contrastShader = FileHelper.LoadShader("assets/shaders/pein/shaders/contrastshader.shader", peinShaders);
+            additiveBlendShader = FileHelper.LoadShader("assets/shaders/pein/shaders/additiveblendshader.shader", peinShaders);
+            blurShader = FileHelper.LoadShader("assets/shaders/pein/shaders/blurshader.shader", peinShaders);
+            exposureShader = FileHelper.LoadShader("assets/shaders/pein/shaders/exposureshader.shader", peinShaders);
+            maskShader = FileHelper.LoadShader("assets/shaders/pein/shaders/maskshader.shader", peinShaders);
         }
 
-        public static Texture2D LoadPNG(string filePath, TextureWrapMode wrapMode)
+        public static void LoadNvgs(ConfigFile config)
         {
-            Texture2D tex = null;
-            byte[] fileData;
-
-            if (File.Exists(filePath))
+            string[] nvgDirs = Directory.GetDirectories(ModDirectories.NvgPath);
+            
+            noiseTexture = FileHelper.LoadTexture(Path.Combine(ModDirectories.CommonAssetsPath, "noise.png"), TextureWrapMode.Repeat);
+            
+            foreach (string nvgDir in nvgDirs)
             {
-                fileData = File.ReadAllBytes(filePath);
-                tex = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-                tex.LoadImage(fileData); //..this will auto-resize the texture dimensions.
-                tex.wrapMode = wrapMode; //otherwise the mask will repeat itself around screen borders
+                NvgItemConfig nvgConfig = FileHelper.ParseJson<NvgItemConfig>(nvgDir, "config.json");
+                Texture maskTexture = FileHelper.LoadTexture(Path.Combine(nvgDir, "mask.png"));
+                Texture lensTexture = FileHelper.LoadTexture(Path.Combine(nvgDir, "lens.png"));
+
+                NightVisionConfigStruct configStruct = new NightVisionConfigStruct()
+                {
+                    Gain = nvgConfig.Gain,
+                    NoiseIntensity = nvgConfig.NoiseIntensity,
+                    NoiseSize = nvgConfig.NoiseSize,
+                    MaskSize = nvgConfig.MaskSize,
+                    Red = nvgConfig.Red,
+                    Green = nvgConfig.Green,
+                    Blue = nvgConfig.Blue,
+                    GatingType = nvgConfig.GatingType,
+                    GatingSpeed = nvgConfig.GatingSpeed,
+                    MaxBrightness = nvgConfig.MaxBrightness,
+                    MinBrightness = nvgConfig.MinBrightness,
+                    MaxBrightnessThreshold = nvgConfig.MaxBrightnessThreshold,
+                    MinBrightnessThreshold = nvgConfig.MinBrightnessThreshold
+                };
+                
+                if (nvgConfig.ItemId != null)
+                {
+                    NvgData nvgData = new NvgData()
+                    {
+                        NvgItemConfig = nvgConfig,
+                        MaskTexture = maskTexture,
+                        LensTexture = lensTexture,
+                        NightVisionConfig = new NightVisionConfig(config, nvgConfig.Category, configStruct)
+                    };
+                    
+                    NvgData.Add(nvgConfig.ItemId, nvgData);
+                    
+                    Plugin.Logger.LogInfo($"Loaded Nvg {nvgConfig.Category} with id: {nvgConfig.ItemId}");
+                    continue;
+                }
+
+                if (nvgConfig.ItemIds.Count > 0)
+                {
+                    foreach (string itemId in nvgConfig.ItemIds)
+                    {
+                        NvgData nvgData = new NvgData()
+                        {
+                            NvgItemConfig = nvgConfig,
+                            MaskTexture = maskTexture,
+                            LensTexture = lensTexture,
+                            NightVisionConfig = new NightVisionConfig(config, nvgConfig.Category, configStruct)
+                        };
+                        
+                        NvgData.Add(itemId, nvgData);
+                    }
+                }
             }
-            else
+        }
+        
+        public static void LoadThermals(ConfigFile config)
+        {
+            string[] thermalDirs = Directory.GetDirectories(ModDirectories.ThermalPath);
+            
+            pixelTexture = FileHelper.LoadTexture(Path.Combine(ModDirectories.CommonAssetsPath, "pixel_mask.png"), TextureWrapMode.Repeat);
+            
+            foreach (string thermalDir in thermalDirs)
             {
-                string relativePath = filePath.Replace(assetsDirectory + "\\", "");
-                Plugin.Log.LogError($"BRNVG Mod: Failed to load PNG: {relativePath}");
-                return null;
+                ThermalItemConfig thermalConfig = FileHelper.ParseJson<ThermalItemConfig>(thermalDir, "config.json");
+                Texture maskTexture = FileHelper.LoadTexture(Path.Combine(thermalDir, "mask.png"));
+                Texture lensTexture = FileHelper.LoadTexture(Path.Combine(thermalDir, "lens.png"));
+
+                ThermalConfigStruct configStruct = new ThermalConfigStruct()
+                {
+                    IsFpsStuck = thermalConfig.IsFpsStuck,
+                    MinFps = thermalConfig.MinFps,
+                    MaxFps = thermalConfig.MaxFps,
+                    IsMotionBlurred = thermalConfig.IsMotionBlurred,
+                    IsNoisy = thermalConfig.IsNoisy,
+                    IsPixelated = thermalConfig.IsPixelated,
+                };
+                
+                if (thermalConfig.ItemId != null)
+                {
+                    ThermalData thermalData = new ThermalData()
+                    {
+                        ThermalItemConfig = thermalConfig,
+                        MaskTexture = maskTexture,
+                        LensTexture = lensTexture,
+                        ThermalConfig = new ThermalConfig(config, thermalConfig.Category, configStruct)
+                    };
+                    
+                    ThermalData.Add(thermalConfig.ItemId, thermalData);
+                    
+                    Plugin.Logger.LogInfo($"Loaded thermal {thermalConfig.Category} with id: {thermalConfig.ItemId}");
+                    continue;
+                }
+
+                if (thermalConfig.ItemIds.Count > 0)
+                {
+                    foreach (string itemId in thermalConfig.ItemIds)
+                    {
+                        ThermalData thermalData = new ThermalData()
+                        {
+                            ThermalItemConfig = thermalConfig,
+                            MaskTexture = maskTexture,
+                            LensTexture = lensTexture,
+                            ThermalConfig = new ThermalConfig(config, thermalConfig.Category, configStruct)
+                        };
+                        
+                        ThermalData.Add(itemId, thermalData);
+                    }
+                }
             }
-
-            return tex;
         }
 
-        public static Texture2D LoadPNG(string filePath)
+        public static async void LoadAudioClips()
         {
-            return LoadPNG(filePath, TextureWrapMode.Clamp);
-        }
-
-        public static Shader LoadShader(string shaderName, string bundlePath)
-        {
-            AssetBundle assetBundle = AssetBundle.LoadFromFile(bundlePath);
-            Shader shader = assetBundle.LoadAsset<Shader>(shaderName);
-            assetBundle.Unload(false);
-            return shader;
-        }
-
-        public static ComputeShader LoadComputeShader(string shaderName, string bundlePath)
-        {
-            AssetBundle assetBundle = AssetBundle.LoadFromFile(bundlePath);
-            ComputeShader computeShader = assetBundle.LoadAsset<ComputeShader>(shaderName);
-            assetBundle.Unload(false);
-            return computeShader;
-        }
-
-        public static void LoadAudioClips()
-        {
-            string[] audioFilesDir = Directory.GetFiles($"{assetsDirectory}\\Sounds");
-            LoadedAudioClips.Clear();
-
-            foreach (string fileDir in audioFilesDir)
+            try
             {
-                LoadAudioClip(fileDir);
+                List<AudioClip> audioClips = await DirectoryHelper.LoadAudioClipsFromDirectory(ModDirectories.SoundsPath);
+
+                foreach (AudioClip audioClip in audioClips)
+                {
+                    LoadedAudioClips.Add(audioClip.name, audioClip);
+                }
             }
-        }
-
-        public static async void LoadAudioClip(string path)
-        {
-            LoadedAudioClips[Path.GetFileName(path)] = await RequestAudioClip(path);
-        }
-
-        public static async Task<AudioClip> RequestAudioClip(string path)
-        {
-            string extension = Path.GetExtension(path);
-            AudioType audioType = AudioType.WAV;
-
-            switch (extension)
+            catch (Exception ex)
             {
-                case ".wav":
-                    audioType = AudioType.WAV;
-                    break;
-                case ".ogg":
-                    audioType = AudioType.OGGVORBIS;
-                    break;
-            }
-
-            UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, audioType);
-            UnityWebRequestAsyncOperation sendWeb = uwr.SendWebRequest();
-
-            while (!sendWeb.isDone)
-                await Task.Yield();
-
-            if (uwr.isNetworkError || uwr.isHttpError)
-            {
-                Plugin.Log.LogWarning("BRNVG Mod: Failed To Fetch Audio Clip");
-                return null;
-            }
-            else
-            {
-                AudioClip audioclip = DownloadHandlerAudioClip.GetContent(uwr);
-                return audioclip;
-            }
+                Plugin.Logger.LogError(ex);
+            } 
         }
     }
 }

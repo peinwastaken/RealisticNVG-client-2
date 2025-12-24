@@ -5,6 +5,8 @@ using System.Reflection;
 using UnityEngine;
 using BorkelRNVG.Configuration;
 using BorkelRNVG.Helpers;
+using BorkelRNVG.Models;
+using EFT;
 
 
 namespace BorkelRNVG.Patches
@@ -22,13 +24,13 @@ namespace BorkelRNVG.Patches
         [PatchPrefix]
         private static bool PatchPrefix(ref NightVision __instance)
         {
-            string nvgID = Util.GetCurrentNvgItemId();
-            if (nvgID == null) return true;
+            string itemId = PlayerHelper.GetCurrentNvgItemId();
+            if (itemId == null) return true;
 
-            Texture2D nvgMask = NightVisionItemConfig.Get(nvgID).MaskTexture;
-            if (nvgMask == null) return true;
-
-            __instance.Mask = nvgMask;
+            NvgData nvgData = NvgHelper.GetNvgData(itemId);
+            if (nvgData == null) return true;
+            
+            __instance.Mask = nvgData.MaskTexture;
             return false;
         }
     }
