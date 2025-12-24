@@ -91,19 +91,19 @@ namespace BorkelRNVG.Controllers
             
             _currentBrightness = 1f;
             GatingMultiplier = 1f;
-            nightVision.ApplySettings();
         }
 
         public void ApplySettings(NightVisionConfig config)
         {
             EGatingType gatingType = config.AutoGatingType.Value;
-            if (gatingType == EGatingType.AutoGain || gatingType == EGatingType.AutoGating)
+            if (gatingType != EGatingType.Off)
             {
                 gateSpeed = config.GatingSpeed.Value;
                 maxBrightnessMult = config.MaxBrightness.Value;
                 minBrightnessMult = config.MinBrightness.Value;
                 minInput = config.MinBrightnessThreshold.Value;
                 maxInput = config.MaxBrightnessThreshold.Value;
+                SetEnabled(true);
             }
             else
             {
@@ -229,7 +229,7 @@ namespace BorkelRNVG.Controllers
             EGatingType gatingType = nvgData.NightVisionConfig.AutoGatingType.Value;
             bool nvgGatingEnabled = gatingType == EGatingType.AutoGating || gatingType == EGatingType.AutoGain;
 
-            if (!Plugin.nvgOn || nvgGatingEnabled || Plugin.enableAutoGating.Value)
+            if (!Plugin.nvgOn || !nvgGatingEnabled || !Plugin.enableAutoGating.Value)
             {
                 _currentBrightness = 1f;
                 GatingMultiplier = 1f;

@@ -55,14 +55,21 @@ namespace BorkelRNVG.Patches
             
             NvgData nvgData = NvgHelper.GetNvgData(itemId);
             if (nvgData == null) return;
+            
+            EGatingType gatingType = nvgData.NightVisionConfig.AutoGatingType.Value;
+            bool enableGating = gatingType != EGatingType.Off;
+            
+            AutoGatingController.Instance?.ApplySettings(nvgData.NightVisionConfig);
+            AutoGatingController.Instance?.SetEnabled(enableGating);
 
+            float gatingMult = AutoGatingController.Instance?.GatingMultiplier ?? 1f;
             float intensity = nvgData.NightVisionConfig.Gain.Value * Plugin.globalGain.Value * (1f + 0.15f * Plugin.gatingLevel.Value);
             float noiseIntensity = 2 * nvgData.NightVisionConfig.NoiseIntensity.Value;
             float noiseSize = 2f - 2 * nvgData.NightVisionConfig.NoiseSize.Value;
             float maskSize = nvgData.NightVisionConfig.MaskSize.Value * Plugin.globalMaskSize.Value;
 
             nightVision.Color.a = 1f;
-            nightVision.Intensity = intensity;
+            nightVision.Intensity = intensity * gatingMult;
             nightVision.NoiseIntensity = noiseIntensity;
             nightVision.NoiseScale = noiseSize;
             nightVision.Mask = nvgData.MaskTexture;
@@ -70,12 +77,6 @@ namespace BorkelRNVG.Patches
             nightVision.Color.r = nvgData.NightVisionConfig.Red.Value / 255f;
             nightVision.Color.g = nvgData.NightVisionConfig.Green.Value / 255f;
             nightVision.Color.b = nvgData.NightVisionConfig.Blue.Value / 255f;
-
-            EGatingType gatingType = nvgData.NightVisionConfig.AutoGatingType.Value;
-            bool enableGating = gatingType != EGatingType.Off;
-            
-            AutoGatingController.Instance?.ApplySettings(nvgData.NightVisionConfig);
-            AutoGatingController.Instance?.SetEnabled(enableGating);
         }
     }
 }
