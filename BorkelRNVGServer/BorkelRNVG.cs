@@ -29,8 +29,6 @@ namespace BorkelRNVGServer
                 .Filter?.Add(n15Id);
             }
             
-            logger.LogWithColor("Successfully loaded Borkel's realistic NVGs!", LogTextColor.Green);
-            
             return Task.CompletedTask;   
         }
     }
