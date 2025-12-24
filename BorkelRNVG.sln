@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BorkelRNVG", "BorkelRNVG.csproj", "{5E8F7250-8E63-4B3F-8A16-D13E053A9055}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BorkelRNVG", "BorkelRNVG\BorkelRNVG.csproj", "{5E8F7250-8E63-4B3F-8A16-D13E053A9055}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
