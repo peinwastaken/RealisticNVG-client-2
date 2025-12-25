@@ -9,7 +9,7 @@ using SPTarkov.Server.Core.Services;
 namespace BorkelRNVGServer
 {
     [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
-    public class BorkelRNVG(ISptLogger<BorkelRNVG> logger, DatabaseService databaseService) : IOnLoad
+    public class BorkelRNVG(DatabaseService databaseService) : IOnLoad
     {
         public Task OnLoad()
         {

@@ -103,7 +103,6 @@ namespace BorkelRNVG.Controllers
                 minBrightnessMult = config.MinBrightness.Value;
                 minInput = config.MinBrightnessThreshold.Value;
                 maxInput = config.MaxBrightnessThreshold.Value;
-                SetEnabled(true);
             }
             else
             {

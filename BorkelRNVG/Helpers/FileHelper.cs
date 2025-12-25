@@ -27,7 +27,7 @@ namespace BorkelRNVG.Helpers
             if (www.isHttpError || www.isNetworkError) return null;
                 
             AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
-            clip.name = fileName;
+            clip.name = Path.GetFileName(fileName);
 
             return clip;
         }

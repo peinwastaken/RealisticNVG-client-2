@@ -175,7 +175,7 @@ namespace BorkelRNVG.Helpers
 
                 foreach (AudioClip audioClip in audioClips)
                 {
-                    LoadedAudioClips.Add(audioClip.name, audioClip);
+                    LoadedAudioClips[audioClip.name] = audioClip;
                 }
             }
             catch (Exception ex)

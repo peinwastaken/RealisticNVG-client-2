@@ -14,68 +14,9 @@ namespace BorkelRNVG.Helpers
 {
     public static class Util
     {
-        private static GameWorld _gameWorld;
-        private static CameraClass _fpsCamera;
-        private static NightVision _nightVision;
-        private static Player _mainPlayer;
-
-        public static CameraClass GetCameraClass() => _fpsCamera;
-
-        public static void InitializeVars()
-        {
-            PlayerCameraController.OnPlayerCameraControllerCreated += OnCameraCreated;
-            PlayerCameraController.OnPlayerCameraControllerDestroyed += OnCameraDestroyed;
-        }
-
-        private static void OnCameraCreated(PlayerCameraController controller, Camera cam)
-        {
-            if (!CameraClass.Exist)
-            {
-                return;
-            }
-
-            _gameWorld = Singleton<GameWorld>.Instance;
-            _mainPlayer = _gameWorld.MainPlayer;
-            _fpsCamera = CameraClass.Instance;
-            if (_fpsCamera.NightVision != null)
-            {
-                _nightVision = _fpsCamera.NightVision;
-            }
-
-            AutoGatingController.Create();
-        }
-
-        public static Player GetPlayer()
-        {
-            if (_mainPlayer == null)
-            {
-                _mainPlayer = Singleton<GameWorld>.Instance.MainPlayer;
-            }
-
-            return _mainPlayer;
-        }
-
         public static bool IsNvgValid()
         {
-            if (!_gameWorld || !_nightVision || !_mainPlayer) return false;
-
-            return _mainPlayer.NightVisionObserver.Component?.Item?.StringTemplateId != null;
-        }
-
-        private static void OnCameraDestroyed()
-        {
-            _fpsCamera = null;
-            _nightVision = null;
-            GameObject.Destroy(AutoGatingController.Instance.gameObject);
-        }
-
-        private static bool CheckFpsCameraExist()
-        {
-            if (_fpsCamera != null)
-            {
-                return true;
-            }
-            return false;
+            return Singleton<GameWorld>.Instance.MainPlayer.NightVisionObserver.Component?.Item?.StringTemplateId != null;
         }
 
         public static void ApplyNightVisionSettings()
@@ -124,7 +65,7 @@ namespace BorkelRNVG.Helpers
 
         public static bool VisibilityCheckOnScreen(Vector3 pos)
         {
-            Vector3 screenPos = _fpsCamera.Camera.WorldToScreenPoint(pos);
+            Vector3 screenPos = CameraClass.Instance.Camera.WorldToScreenPoint(pos);
             return screenPos.z > 0 && screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height;
         }
     }

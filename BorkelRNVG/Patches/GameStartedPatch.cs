@@ -1,3 +1,4 @@
+using BorkelRNVG.Controllers;
 using BorkelRNVG.Helpers;
 using EFT;
 using HarmonyLib;
@@ -17,6 +18,7 @@ namespace BorkelRNVG.Patches
         private static void PatchPostfix(GameWorld __instance)
         {
             AssetHelper.LoadAudioClips();
+            AutoGatingController.Create();
         }
     }
 }

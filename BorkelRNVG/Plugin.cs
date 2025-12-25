@@ -9,6 +9,7 @@ using Comfort.Common;
 using BepInEx.Logging;
 using BorkelRNVG.Configuration;
 using BorkelRNVG.Helpers;
+using EFT;
 using HarmonyLib;
 
 namespace BorkelRNVG
@@ -99,9 +100,6 @@ namespace BorkelRNVG
 
             // other variables.. idk
             gatingLevel.Value = 0;
-
-            // create nvg config classes
-            Util.InitializeVars();
             
             // load assets
             AssetHelper.LoadShaders();
@@ -154,12 +152,14 @@ namespace BorkelRNVG
             if (Input.GetKeyDown(gatingInc.Value) && gatingLevel.Value < 2)
             {
                 gatingLevel.Value++;
-                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
+                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100);
+                CameraClass.Instance.NightVision.ApplySettings();
             }
             else if (Input.GetKeyUp(gatingDec.Value) && gatingLevel.Value > -2)
             {
                 gatingLevel.Value--;
-                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100, 1.0f, EOcclusionTest.None, null, false);
+                Singleton<BetterAudio>.Instance.PlayAtPoint(new Vector3(0, 0, 0), AssetHelper.LoadedAudioClips["gatingKnob.wav"], 0, BetterAudio.AudioSourceGroupType.Nonspatial, 100);
+                CameraClass.Instance.NightVision.ApplySettings();
             }
         }
     }

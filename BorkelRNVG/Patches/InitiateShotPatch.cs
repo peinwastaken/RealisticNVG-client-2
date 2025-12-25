@@ -42,7 +42,7 @@ namespace BorkelRNVG.Patches
 
             EMuzzleDeviceType deviceType = Util.GetMuzzleDeviceType(__instance);
 
-            Player mainPlayer = Util.GetPlayer();
+            Player mainPlayer = PlayerHelper.LocalPlayer;
             Player firearmOwner = __instance.GetComponentInParent<Player>();
             Camera camera = CameraClass.Instance.Camera;
 
