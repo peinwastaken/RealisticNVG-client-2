@@ -125,7 +125,8 @@ namespace BorkelRNVG
                 new LaserBeamAwakePatch().Enable();
                 new LaserBeamLateUpdatePatch().Enable();
                 new EmitGrenadePatch().Enable();
-
+                new GameStartedPatch().Enable();
+                
                 if (allowAmbientChange.Value)
                 {
                     AmbientPatch.TogglePatch(true);
