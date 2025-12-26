@@ -16,7 +16,7 @@ namespace BorkelRNVG.Helpers
     {
         public static bool IsNvgValid()
         {
-            return Singleton<GameWorld>.Instance.MainPlayer.NightVisionObserver.Component?.Item?.StringTemplateId != null;
+            return Singleton<GameWorld>.Instance.MainPlayer?.NightVisionObserver?.Component?.Item?.StringTemplateId != null;
         }
 
         public static void ApplyNightVisionSettings()
