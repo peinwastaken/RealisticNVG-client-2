@@ -1,13 +1,10 @@
-﻿using BorkelRNVG.Configuration;
-using BorkelRNVG.Enum;
+﻿using BorkelRNVG.Enum;
 using BorkelRNVG.Controllers;
 using BorkelRNVG.Models;
 using BSG.CameraEffects;
 using Comfort.Common;
 using EFT;
-using EFT.CameraControl;
 using EFT.InventoryLogic;
-using System;
 using UnityEngine;
 
 namespace BorkelRNVG.Helpers
